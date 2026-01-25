@@ -72,7 +72,7 @@ class RegisterService(BaseTaskService[RegisterTask]):
                 domain_value = (config.basic.register_domain or "").strip() or None
 
             register_count = count or config.basic.register_default_count
-            register_count = max(1, min(30, int(register_count)))
+            register_count = max(1, int(register_count))
             task = RegisterTask(id=str(uuid.uuid4()), count=register_count, domain=domain_value)
             self._tasks[task.id] = task
             # 将 domain 记录在日志里，便于排查

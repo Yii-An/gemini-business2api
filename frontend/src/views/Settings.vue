@@ -109,7 +109,6 @@
                   v-model.number="localSettings.basic.register_default_count"
                   type="number"
                   min="1"
-                  max="30"
                   class="w-full rounded-2xl border border-input bg-background px-3 py-2 text-sm"
                 />
                 <label class="block text-xs text-muted-foreground">默认注册域名（推荐）</label>
