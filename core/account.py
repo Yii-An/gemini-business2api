@@ -535,17 +535,27 @@ def load_accounts_from_source() -> list:
 
     if storage.is_database_enabled():
         try:
-            has_accounts = storage.has_accounts_sync()
-            if has_accounts:
-                accounts_data = storage.load_accounts_sync()
-                if accounts_data:
-                    logger.info(f"[CONFIG] 从数据库加载配置，共 {len(accounts_data)} 个账户")
-                return accounts_data or []
-            logger.warning("[CONFIG] 数据库中账户配置为空")
-            return []
+            accounts_data = storage.load_accounts_sync()
+
+            # 严格模式：数据库连接失败时抛出异常，阻止应用启动
+            if accounts_data is None:
+                logger.error("[CONFIG] ❌ 数据库连接失败")
+                logger.error("[CONFIG] 请检查 DATABASE_URL 配置或网络连接")
+                raise RuntimeError("数据库连接失败，应用无法启动")
+
+            if accounts_data:
+                logger.info(f"[CONFIG] 从数据库加载配置，共 {len(accounts_data)} 个账户")
+            else:
+                logger.warning("[CONFIG] 数据库中账户配置为空")
+                logger.warning("[CONFIG] 如需迁移数据，请运行: python scripts/migrate_to_database.py")
+
+            return accounts_data
+        except RuntimeError:
+            # 重新抛出 RuntimeError（数据库连接失败）
+            raise
         except Exception as e:
-            logger.error(f"[CONFIG] 数据库加载失败: {e}")
-            return []
+            logger.error(f"[CONFIG] ❌ 数据库加载失败: {e}")
+            raise RuntimeError(f"数据库加载失败: {e}")
 
     logger.error("[CONFIG] 未启用数据库且未提供 ACCOUNTS_CONFIG")
     return []
